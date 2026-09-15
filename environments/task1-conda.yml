@@ -1,0 +1,6 @@
+name: patientphex-task1
+channels:
+  - conda-forge
+dependencies:
+  - pytest=8.3.5
+  - python=3.11
