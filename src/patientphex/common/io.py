@@ -1,8 +1,10 @@
-"""Strict UTF-8 JSONL reader for PatientPheX documents."""
+"""Strict UTF-8 JSONL reader and atomic writer for PatientPheX documents."""
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+import os
+import tempfile
+from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +18,16 @@ class JSONLReadError(ValueError):
         self.path = path
         self.line_number = line_number
         super().__init__(f"{path}: line {line_number}: {message}")
+
+
+def _is_official_download(path: Path) -> bool:
+    """Return whether ``path`` is inside the immutable official download tree."""
+    resolved = path.resolve(strict=False)
+    parts = resolved.parts
+    for index in range(len(parts) - 1):
+        if parts[index] == "downloads" and parts[index + 1] == "PatientData":
+            return True
+    return False
 
 
 def read_jsonl(path: str | Path) -> Iterator[Document]:
@@ -40,4 +52,39 @@ def load_jsonl(path: str | Path) -> list[Document]:
     return list(read_jsonl(path))
 
 
-__all__ = ["JSONLReadError", "load_jsonl", "read_jsonl"]
+def write_jsonl(path: str | Path, documents: Iterable[Document]) -> None:
+    """Atomically write documents as UTF-8 JSONL in the given iteration order.
+
+    The immutable official download directory is deliberately rejected as a
+    destination.  A temporary file is fsynced in the destination directory and
+    replaced into place only after every document has serialized successfully.
+    """
+    destination = Path(path)
+    if _is_official_download(destination):
+        raise ValueError(f"refusing to write inside immutable downloads/PatientData: {destination}")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            newline="",
+            prefix=f".{destination.name}.",
+            suffix=".tmp",
+            dir=destination.parent,
+            delete=False,
+        ) as handle:
+            temporary = Path(handle.name)
+            for document in documents:
+                json.dump(document.to_dict(), handle, ensure_ascii=False, separators=(",", ":"))
+                handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, destination)
+        temporary = None
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
+
+__all__ = ["JSONLReadError", "load_jsonl", "read_jsonl", "write_jsonl"]
