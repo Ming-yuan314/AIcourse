@@ -98,6 +98,20 @@ def test_name_and_exact_synonym_queries_are_case_insensitive(tmp_path: Path) -> 
     assert index.find_by_name("loose label", exact_only=False) == frozenset({"HP:0001000", "HP:0001002"})
 
 
+def test_empty_synonym_type_is_not_recorded_for_empty_xrefs(tmp_path: Path) -> None:
+    path = tmp_path / "sample.obo"
+    _write_sample(path)
+    index = load_hpo(path)
+
+    child = index.get_term("HP:0001000")
+    exact = next(synonym for synonym in child.synonyms if synonym.text == "Shared label")
+    related = next(synonym for synonym in child.synonyms if synonym.text == "Loose label")
+    assert exact.scope == "EXACT"
+    assert exact.synonym_type is None
+    assert related.scope == "RELATED"
+    assert related.synonym_type is None
+
+
 def test_alt_id_resolves_only_to_valid_primary_id(tmp_path: Path) -> None:
     path = tmp_path / "sample.obo"
     _write_sample(path)

@@ -124,7 +124,7 @@ def _quoted_synonym(value: str, *, path: Path, line_number: int) -> HPOSynonym:
     if not fields:
         raise HPOParseError(f"{path}: line {line_number}: synonym scope is missing")
     scope = fields[0].upper()
-    synonym_type = fields[1] if len(fields) > 1 and fields[1] != "[" else None
+    synonym_type = fields[1] if len(fields) > 1 and not fields[1].startswith("[") else None
     return HPOSynonym(
         text=_unescape_obo_text("".join(chars)),
         scope=scope,
