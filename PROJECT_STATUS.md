@@ -3,26 +3,29 @@
 ## Current state
 
 - Branch: `codex/task1-data-foundation`
-- Latest implementation commit: `90ba1078cc84698ea35615b2a82780e9aefa360f` (`feat(data): prepare validated documents and article folds`)
-- The immutable official download directory remains unchanged and read-only.
-- Prepared artifacts are generated outside Git under the configured data root.
+- Latest implementation commit: `cc50566` (`feat(data): add frozen HPO branch index`)
+- The immutable official download directory and frozen HPO file remain unchanged.
+- Common data foundation, offset validation, preparation/folds, and HPO branch indexing are implemented.
 
 ## Completed foundations
 
 - Lightweight Conda environment `patientphex-task1` is locked for linux-64.
 - Official HPO `v2026-06-23` is fixed at the data-root ontology path.
-- Strict JSONL schema/reader, exact global offset validation, and atomic JSONL writing are implemented.
-- Training and A-list work copies, deterministic article folds, and a portable manifest are generated.
+- Strict JSONL schema/reader, exact global offset validation, atomic JSONL writing, validated work copies, and deterministic article folds are implemented.
+- `src/patientphex/common/hpo.py` loads only `hp/releases/2026-06-23`, indexes the `HP:0000118` branch, and exposes status-aware ID and name/synonym queries.
 
 ## Latest validation
 
-- Full test suite: `29 passed`.
+- HPO-focused tests: 7 passed.
+- Common tests: 36 passed.
 - `python -m compileall -q src scripts`: exit 0.
-- Training work copy: 80 documents, 209 patients, 677 patient mentions, 6027 entities, 209 associations, 0 invalid spans.
-- A-list work copy: 20 documents, 53 patients, 147 patient mentions, 0 entities, 0 associations, 0 invalid spans.
-- Article folds: 5 folds, each with 16 documents; every training `pmc_id` is assigned exactly once.
-- Re-running the preparation command with the same seed produced identical hashes for all four artifacts.
+- Official HPO parsed terms: 20,413.
+- Valid terms in the `HP:0000118` branch: 19,120.
+- Formal-name/EXACT-synonym index keys: 41,107.
+- All-name/synonym index keys: 43,670.
+- `alt_id` entries: 3,964.
+- HPO SHA256: `a5092cbdf605f568403cf7380d9173014015692433b2cc631bc5c1b053876b1b`.
 
 ## Next action
 
-Implement the HPO `v2026-06-23` loader and the `HP:0000118` branch index. Do not begin Task 1 candidate generation until that common prerequisite is tested and handed off.
+Implement the Task 1 dictionary candidate generator using `HPOIndex.find_by_name()` with exact formal names and EXACT synonyms. Do not add text matching, PhenoTagger, SapBERT, or model training to the common HPO loader.
