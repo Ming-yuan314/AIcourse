@@ -4,6 +4,7 @@
 
 - Start commit: `88f9be8` (`docs: record S1 data preparation`)
 - Implementation commit: `cc50566` (`feat(data): add frozen HPO branch index`)
+- Follow-up fix commit: `0b99a3b` (`fix(data): parse empty HPO synonym types`)
 - Branch: `codex/task1-data-foundation`
 
 ## Completed
@@ -14,6 +15,7 @@
 - `HPOTerm` preserves primary ID, original name, typed synonyms, parents, alt IDs, obsolete state, and replacement IDs.
 - `lookup_id()` distinguishes `VALID`, `UNKNOWN`, `OBSOLETE`, `OUTSIDE_BRANCH`, and ambiguous alternate-ID mappings. `get_term()` raises a status-bearing `HPOQueryError` for unusable IDs.
 - `find_by_name(text, exact_only=True)` is case-insensitive, returns all candidate primary IDs, and indexes formal names plus only `EXACT` synonyms by default. `exact_only=False` exposes the broader preserved synonym index without silently using it for exact dictionary matching.
+- Empty synonym xref lists such as `synonym: "..." EXACT []` no longer become a false `synonym_type`; they are represented as `None`.
 - Exported the HPO API through `patientphex.common`.
 
 ## Frozen ontology audit
@@ -56,7 +58,7 @@ conda run -n patientphex-task1 python -m compileall -q src scripts
 # exit 0
 ```
 
-The HPO tests include a full-file integration test; term totals are recorded above but are not hard-coded as equality assertions.
+The HPO tests include a full-file integration test; term totals are recorded above but are not hard-coded as equality assertions. Regression test `test_empty_synonym_type_is_not_recorded_for_empty_xrefs` covers both `EXACT []` and `RELATED []`.
 
 ## Scope and safety
 
@@ -67,3 +69,5 @@ The HPO tests include a full-file integration test; term totals are recorded abo
 ## Next session input and acceptance
 
 Use `HPOIndex.find_by_name()` for the Task 1 dictionary candidate generator. Keep the default `exact_only=True` behavior so only formal names and EXACT synonyms are emitted as exact candidates; retain all other synonym scopes only for explicit non-exact analysis.
+
+This HPO loader stage is fully passed: focused HPO tests 8/8, common tests 37/37, and compileall exit 0.

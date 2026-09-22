@@ -25,7 +25,11 @@
 - All-name/synonym index keys: 43,670.
 - `alt_id` entries: 3,964.
 - HPO SHA256: `a5092cbdf605f568403cf7380d9173014015692433b2cc631bc5c1b053876b1b`.
+- Follow-up parser fix: `EXACT []` and other empty-xref synonym records now keep `synonym_type=None` instead of recording `[]`.
+- HPO-focused tests after the fix: 8 passed; common tests: 37 passed.
 
 ## Next action
 
 Implement the Task 1 dictionary candidate generator using `HPOIndex.find_by_name()` with exact formal names and EXACT synonyms. Do not add text matching, PhenoTagger, SapBERT, or model training to the common HPO loader.
+
+The HPO loader stage is fully passed after commit `0b99a3b` (`fix(data): parse empty HPO synonym types`).
